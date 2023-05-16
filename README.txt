@@ -1,4 +1,4 @@
-This Project is available to clone/fork on Github
+This Project is available to clone/fork on Github: https://github.com/avROCKET/JoyChat
 
 JOY CHAT
 
