@@ -4,14 +4,14 @@ JOY CHAT is a simple Java-based chat application that uses sockets for communica
 
 ## Functions:
 The **Server** *manages* and *broadcasts* messages to all connected clients. The GUI logs every system event.\
-The **Clients** can *connect*, *send messages*, and *disconnect* from the server. The GUI allows for a simple user interface.\
+The **Clients** can *connect*, *send messages*, and *disconnect* from the server. The GUI allows for a simple user interface.
 
 ## Features:
 **Client-Server Chat System:** Clients can send messages to the server, which the server then broadcasts these messages to all other connected clients.\
 **Sound Notifications:** Sounds are played on client connect, disconnect, and when sending/receiving messages.\
 **Anti-Spam Feature:** The client has to wait for 10 seconds before sending the same message again.\
 **GUI Interface:** The server GUI displays a log of client connections and disconnections, along with other system messages.\
-The client interface includes 2 buttons to connect and disconnect, a chat display frame and text area for messages.\
+The client interface includes 2 buttons to connect and disconnect, a chat display frame and text area for messages.
 
 ## Getting Started:
 **To Compile**
