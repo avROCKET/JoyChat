@@ -45,8 +45,17 @@ public class ClientGUI extends JFrame {
         inputField.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 String message = inputField.getText();
-                client.sendMessage(message);
-                inputField.setText("");
+                if (message.isEmpty()) {
+                    // Bugfix 2: Empty messages can be sent...
+                    // Shows a warning message for empty text field
+                    JOptionPane.showMessageDialog(ClientGUI.this,
+                        "Please write a message before sending.",
+                        "Empty Message",
+                        JOptionPane.WARNING_MESSAGE);
+                } else {
+                    client.sendMessage(message);
+                    inputField.setText("");
+                }
             }
         });
         inputField.setFont(font);
@@ -65,6 +74,11 @@ public class ClientGUI extends JFrame {
 
                 // Bugfix 1: When user clicks cancel, name becomes null... null doesn't sound cool...
                 if (name == null || name.isEmpty()) {
+                    // Just a warning that name was changed.
+                    JOptionPane.showMessageDialog(ClientGUI.this,
+                        "Client Name was not entered. Name set to 'Anonymous'.",
+                        "No Name",
+                        JOptionPane.WARNING_MESSAGE);
                     name = "Anonymous"; // Sets name to Anonymous is user clicks cancel/closes dialog box.
                 }
 
