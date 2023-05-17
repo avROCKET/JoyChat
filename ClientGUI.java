@@ -3,6 +3,7 @@ import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
+import java.lang.reflect.Constructor;
 import java.net.*;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
@@ -15,8 +16,9 @@ public class ClientGUI extends JFrame {
     private JTextArea chatArea;
     private Client client;
     
+    //Constructor: Client GUI, includes chat display area, the text input field, and the connect/disconnect buttons.
     public ClientGUI() {
-        // Initializes the GUI. Set the theme (look and feel, as JAVA calls it) to NIMBUS
+        // Set the theme (look and feel, as JAVA calls it) to NIMBUS
         try {
             for (UIManager.LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {
                 if ("Nimbus".equals(info.getName())) {
@@ -33,13 +35,12 @@ public class ClientGUI extends JFrame {
         chatArea = new JTextArea(20, 30);
         chatArea.setEditable(false);
         JScrollPane scrollPane = new JScrollPane(chatArea);
-        chatArea.setBorder(new EmptyBorder(10, 10, 10, 10)); // Add padding
+        chatArea.setBorder(new EmptyBorder(10, 10, 10, 10));
 
-        // This is to make the font bigger and easily readable
         Font font = new Font("Arial", Font.PLAIN, 18);
         chatArea.setFont(font);
 
-        // This is the Text Area for writing up messages
+        // This is the Text Area for writing messages
         inputField = new JTextField(30);
         inputField.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
@@ -48,11 +49,11 @@ public class ClientGUI extends JFrame {
                 inputField.setText("");
             }
         });
-        inputField.setFont(font); // Uses the font from above
+        inputField.setFont(font);
 
-        // This is the Connect button
+        // This is the Connect button - when launched, program does not automatically connect to server. Connects after name is entered.
         connectButton = new JButton("LOGIN");
-        connectButton.setBackground(new Color(152, 251, 152)); // Change button color
+        connectButton.setBackground(new Color(152, 251, 152));
         connectButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 String name = JOptionPane.showInputDialog( // after clicking "LOGIN", dialog box appears asking for the name of client
@@ -61,6 +62,11 @@ public class ClientGUI extends JFrame {
                         "Connect to JOY CHAT server",
                         JOptionPane.PLAIN_MESSAGE
                 );
+
+                // Bugfix 1: When user clicks cancel, name becomes null... null doesn't sound cool...
+                if (name == null || name.isEmpty()) {
+                    name = "Anonymous"; // Sets name to Anonymous is user clicks cancel/closes dialog box.
+                }
 
                 JOptionPane.showMessageDialog(ClientGUI.this,
                 "Welcome "+ name +"!\n" +
@@ -75,9 +81,9 @@ public class ClientGUI extends JFrame {
             }
         });
 
-        // This is the Disconnect button
+        // This is the Disconnect button, replaces "quit"/"disconnect" in chat
         disconnectButton = new JButton("LOGOUT");
-        disconnectButton.setBackground(new Color(255, 182, 193)); // Change button color
+        disconnectButton.setBackground(new Color(255, 182, 193));
         disconnectButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 if (client != null) {
@@ -87,7 +93,7 @@ public class ClientGUI extends JFrame {
             }
         });
 
-        // Other stuff like padding and layout options
+        // Other stuff like JPanels, padding and layout options
         JPanel panel = new JPanel();
         panel.setLayout(new BorderLayout());
         panel.add(scrollPane, BorderLayout.CENTER);
@@ -119,9 +125,17 @@ public class ClientGUI extends JFrame {
         private String name;
         private Socket socket;
 
+        //Constructor: Sets client name
         public Client(String name) {
             this.name = name;
         }
+
+        /**
+         * Main method for the Client thread:
+         * - Connects to the server.
+         * - Sends a CONNECT message and enters a loop where it reads messages from the server, 
+         *   updates the chat display area, and plays a sound depending on the message type.
+         */
 
         public void run() {
             try {
@@ -147,7 +161,7 @@ public class ClientGUI extends JFrame {
             }
         }
 
-        /* This method is modified so I can create a JAR file that has access to the resourses.
+        /* This method has been modified so an InputStream can access the resourses packaged in a JAR file.
         public void playSound(String soundName) { //this takes in a string as a "filepath" to find the file and play it
             try {
                 AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(new File(soundName).getAbsoluteFile());
@@ -160,7 +174,8 @@ public class ClientGUI extends JFrame {
             }
         }
         */
-
+        
+        // Plays sound. Reads the file from InputStream (accessing resources packaged in JAR)
         public void playSound(String soundName) { 
             try {
                 InputStream audioSrc = getClass().getResourceAsStream(soundName);
@@ -178,23 +193,29 @@ public class ClientGUI extends JFrame {
         private String lastMessage = null;
         private long lastMessageTime = 0;
 
+        /**
+         * sendMessage() sends a message to the server. It prevents the client from sending the same message within 10 seconds (anti-spam), 
+         * sends a DISCONNECT message if the message is "quit" or "disconnect", and sends a MESSAGE otherwise.
+         * @param message Message sent from client.
+         */
         public void sendMessage(String message) {
             // THE ANTI-SPAM MACHINE!!!!
-            // Stores last message and if the next message is the same as previous message
-            // the client has to wait 10 seconds before sending the same message again.
+            // Tracks the previous message and the time it was sent. If the message is equal to the previous message, it will check if it was sent less than 10 seconds ago
             long now = System.currentTimeMillis();
             if (message.equals(lastMessage) && now - lastMessageTime < 10000) { 
                 chatArea.append("Please wait 10 seconds before sending the same message again.\n");
                 return;
             }
 
-            //I'm just leaving this in here, but it is not necessary anymore because the GUI has disconnect and connect buttons
+            /* I'm just leaving this in here, but it is not necessary anymore because the GUI has disconnect and connect buttons
             if (message.equalsIgnoreCase("quit") || message.equalsIgnoreCase("disconnect")) {
                 disconnect();
-            } else {
+            } */
+
+            else {
                 out.println("MESSAGE " + message);
-                lastMessage = message;
-                lastMessageTime = now;
+                lastMessage = message; //stores message
+                lastMessageTime = now; //stores current time
             }
         }
 
@@ -209,7 +230,7 @@ public class ClientGUI extends JFrame {
         }
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) { // Entry Point: new instance of ClientGUI
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {
                 new ClientGUI();
